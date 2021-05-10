@@ -2,9 +2,9 @@ package main
 
 import (
 	"github.com/JxrezDev/IoTApi/controller"
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
-	"github.com/gorilla/mux"
 )
 
 func main() {

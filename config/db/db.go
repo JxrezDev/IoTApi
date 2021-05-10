@@ -19,6 +19,6 @@ func GetDBCollection() (*mongo.Collection, error) {
 	if err != nil {
 		return nil, err
 	}
-	collection := client.Database("GoLogin").Collection("users")
+	collection := client.Database("IoTDB").Collection("users")
 	return collection, nil
 }
