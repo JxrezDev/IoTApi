@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/JxrezDev/IoTApi/controller"
+	gohandlers "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
@@ -16,5 +17,9 @@ func main() {
 	r.HandleFunc("/profile", controller.ProfileHandler).
 		Methods("GET")
 
-	log.Fatal(http.ListenAndServe(":8080", r))
+	ch := gohandlers.CORS(gohandlers.AllowedOrigins([]string{"*"}),
+		gohandlers.AllowedHeaders([]string{"Content-Type", "Authorization"}),
+		gohandlers.AllowedMethods([]string{"GET", "POST", "PUT", "OPTIONS"}))
+
+	log.Fatal(http.ListenAndServe(":9001", ch(r)))
 }
