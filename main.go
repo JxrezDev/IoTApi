@@ -16,6 +16,8 @@ func main() {
 		Methods("POST")
 	r.HandleFunc("/profile", controller.ProfileHandler).
 		Methods("GET")
+	r.HandleFunc("/bancas", controller.BancasHandler).
+		Methods("POST")
 
 	ch := gohandlers.CORS(gohandlers.AllowedOrigins([]string{"*"}),
 		gohandlers.AllowedHeaders([]string{"Content-Type", "Authorization"}),

@@ -161,5 +161,62 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(res)
 		return
 	}
+}
 
+func BancasHandler(w http.ResponseWriter, r *http.Request) {
+
+	w.Header().Set("Content-Type", "application/json")
+
+	var banca model.Banca
+	body, _ := ioutil.ReadAll(r.Body)
+	err := json.Unmarshal(body, &banca)
+	var res model.ResponseResult
+	if err != nil {
+		res.Error = err.Error()
+		json.NewEncoder(w).Encode(res)
+		return
+	}
+
+	collection, err := db.GetDBIotCollection()
+
+	if err != nil {
+		res.Error = err.Error()
+		json.NewEncoder(w).Encode(res)
+		return
+	}
+	var result model.Banca
+	err = collection.FindOne(context.TODO(), bson.D{{"idbanca", banca.IdBanca}}).Decode(&result)
+
+	if err != nil {
+		if err.Error() == "mongo: no documents in result" {
+
+			_, err = collection.InsertOne(context.TODO(), banca)
+			if err != nil {
+				res.Error = "Error mientras se creaba su registro, intente de nuevo"
+				json.NewEncoder(w).Encode(res)
+				return
+			}
+
+			res.Result = "Registro Exitoso"
+			json.NewEncoder(w).Encode(res)
+			return
+		}
+
+		res.Error = err.Error()
+		json.NewEncoder(w).Encode(res)
+		return
+	}
+
+	_, err = collection.UpdateOne(context.TODO(), bson.M{"idbanca": banca.IdBanca},
+		bson.D{{"$set", bson.D{{"estado", banca.Estado}}}})
+	if err != nil {
+		res.Error = "Error mientras se actualizaba su registro, intente de nuevo"
+		res.Result = err.Error()
+		json.NewEncoder(w).Encode(res)
+		return
+	}
+
+	res.Result = "Actualizacon Exitosa"
+	json.NewEncoder(w).Encode(res)
+	return
 }

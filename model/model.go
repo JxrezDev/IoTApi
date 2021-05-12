@@ -13,3 +13,8 @@ type ResponseResult struct {
 	Result string `json:"result"`
 	Token  string `json:"token"`
 }
+
+type Banca struct {
+	IdBanca string `json:"idbanca"`
+	Estado  string `json:"estado"`
+}
