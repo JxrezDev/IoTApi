@@ -8,6 +8,7 @@ import (
 	"github.com/JxrezDev/IoTApi/model"
 	jwt "github.com/dgrijalva/jwt-go"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
 	"io/ioutil"
 	"log"
@@ -163,7 +164,7 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func BancasHandler(w http.ResponseWriter, r *http.Request) {
+func BancaHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
@@ -218,5 +219,45 @@ func BancasHandler(w http.ResponseWriter, r *http.Request) {
 
 	res.Result = "Actualizacon Exitosa"
 	json.NewEncoder(w).Encode(res)
+	return
+}
+
+func BancasHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	collection, err := db.GetDBIotCollection()
+
+	var results []model.Banca
+	var res model.ResponseResult
+	findOptions := options.Find()
+	cursor, err := collection.Find(context.TODO(), bson.D{{}}, findOptions)
+
+	if err != nil {
+		log.Fatal(err)
+		res.Error = err.Error()
+		json.NewEncoder(w).Encode(res)
+		return
+	}
+	for cursor.Next(context.TODO()) {
+		var elem model.Banca
+		err := cursor.Decode(&elem)
+		if err != nil {
+			log.Fatal(err)
+			res.Error = err.Error()
+			json.NewEncoder(w).Encode(res)
+			return
+		}
+
+		results = append(results, elem)
+	}
+
+	if err := cursor.Err(); err != nil {
+		log.Fatal(err)
+		res.Error = err.Error()
+		json.NewEncoder(w).Encode(res)
+		return
+	}
+
+	json.NewEncoder(w).Encode(results)
 	return
 }
