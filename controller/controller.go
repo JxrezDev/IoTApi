@@ -135,6 +135,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	res.Token = tokenString
 	res.Result = "Login Exitoso"
+	res.AuthVerification = result.AuthVerification
 
 	json.NewEncoder(w).Encode(res)
 }

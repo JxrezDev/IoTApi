@@ -9,9 +9,10 @@ type User struct {
 }
 
 type ResponseResult struct {
-	Error  string `json:"error"`
-	Result string `json:"result"`
-	Token  string `json:"token"`
+	Error            string `json:"error"`
+	Result           string `json:"result"`
+	Token            string `json:"token"`
+	AuthVerification bool   `json:"authVerification"`
 }
 
 type Banca struct {
