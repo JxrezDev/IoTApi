@@ -227,8 +227,6 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		result.Username = claims["username"].(string)
-		result.Email = claims["email"].(string)
 
 		err = collection.FindOne(context.TODO(), bson.D{{"email", claims["email"].(string)}}).Decode(&user)
 		if err != nil {
@@ -237,6 +235,8 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		result.Username = user.Username
+		result.Email = user.Email
 		result.AuthVerification = user.AuthVerification
 		json.NewEncoder(w).Encode(result)
 		return
