@@ -16,6 +16,8 @@ func main() {
 		Methods("POST")
 	r.HandleFunc("/profile", controller.ProfileHandler).
 		Methods("GET")
+	r.HandleFunc("/authVerification", controller.AuthVerification).
+		Methods("POST")
 	r.HandleFunc("/banca", controller.BancaHandler).
 		Methods("POST")
 	r.HandleFunc("/bancas", controller.BancasHandler).

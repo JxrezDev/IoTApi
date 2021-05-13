@@ -140,6 +140,63 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
+func AuthVerification(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	tokenString := r.Header.Get("Authorization")
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		// Don't forget to validate the alg is what you expect:
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method")
+		}
+		return []byte("secret"), nil
+	})
+
+	var res model.ResponseResult
+
+	if err != nil {
+		res.Error = "Error al cargar token"
+		json.NewEncoder(w).Encode(res)
+		return
+	}
+
+	var user model.User
+	body, _ := ioutil.ReadAll(r.Body)
+	err = json.Unmarshal(body, &user)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	collection, err := db.GetDBCollection()
+	if err != nil {
+		res.Error = err.Error()
+		json.NewEncoder(w).Encode(res)
+		return
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		_, err = collection.UpdateOne(context.TODO(), bson.M{"email": claims["email"].(string)},
+			bson.D{{"$set", bson.D{{"authVerification", user.AuthVerification}}}})
+
+		println(claims["email"].(string))
+		println(user.AuthVerification)
+		if err != nil {
+			res.Error = "Error mientras se actualizaba su registro, intente de nuevo"
+			res.Result = err.Error()
+			json.NewEncoder(w).Encode(res)
+			return
+		}
+
+		res.AuthVerification = user.AuthVerification
+		res.Result = "Actualizacon Exitosa"
+		json.NewEncoder(w).Encode(res)
+		return
+	} else {
+		res.Error = err.Error()
+		json.NewEncoder(w).Encode(res)
+		return
+	}
+}
+
 func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	tokenString := r.Header.Get("Authorization")
@@ -150,12 +207,37 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return []byte("secret"), nil
 	})
-	var result model.User
+
 	var res model.ResponseResult
+
+	if err != nil {
+		res.Error = "Error al cargar token"
+		json.NewEncoder(w).Encode(res)
+		return
+	}
+
+	var result model.User
+	var user model.User
+
+	collection, err := db.GetDBCollection()
+	if err != nil {
+		res.Error = err.Error()
+		json.NewEncoder(w).Encode(res)
+		return
+	}
+
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		result.Username = claims["username"].(string)
 		result.Email = claims["email"].(string)
 
+		err = collection.FindOne(context.TODO(), bson.D{{"email", claims["email"].(string)}}).Decode(&user)
+		if err != nil {
+			res.Error = "Error al encontrar el usuario"
+			json.NewEncoder(w).Encode(res)
+			return
+		}
+
+		result.AuthVerification = user.AuthVerification
 		json.NewEncoder(w).Encode(result)
 		return
 	} else {
