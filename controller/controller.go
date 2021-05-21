@@ -7,12 +7,14 @@ import (
 	"github.com/JxrezDev/IoTApi/config/db"
 	"github.com/JxrezDev/IoTApi/model"
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/gorilla/websocket"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 )
 
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
@@ -249,6 +251,11 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 
 func BancaHandler(w http.ResponseWriter, r *http.Request) {
 
+	u := url.URL{Scheme: "ws", Host: "143.198.109.195:5555", Path: "/"}
+	c, _, _ := websocket.DefaultDialer.Dial(u.String(), nil)
+
+	defer c.Close()
+
 	w.Header().Set("Content-Type", "application/json")
 
 	var banca model.Banca
@@ -281,6 +288,9 @@ func BancaHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
+			_ = c.WriteMessage(websocket.TextMessage, []byte("update"))
+			log.Printf("Message sent: %s", "update")
+
 			res.Result = "Registro Exitoso"
 			json.NewEncoder(w).Encode(res)
 			return
@@ -300,9 +310,11 @@ func BancaHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_ = c.WriteMessage(websocket.TextMessage, []byte("update"))
+	log.Printf("Message sent: %s", "update")
+
 	res.Result = "Actualizacon Exitosa"
 	json.NewEncoder(w).Encode(res)
-	return
 }
 
 func BancasHandler(w http.ResponseWriter, r *http.Request) {
